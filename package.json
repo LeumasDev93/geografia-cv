@@ -1,0 +1,43 @@
+{
+  "name": "geografia-cv",
+  "version": "1.0.0",
+  "description": "Regionalização de Cabo Verde (ilha, concelho, freguesia, zona, lugar) com pesquisa e middleware HTTP. Sem dependências.",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "bin": {
+    "geografia-cv": "./dist/servidor.js"
+  },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "vitest run",
+    "importar": "node scripts/importar.mjs",
+    "servidor": "node dist/servidor.js",
+    "prepare": "tsc -p tsconfig.json",
+    "start": "node dist/servidor.js"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.7",
+    "typescript": "^5.8.0",
+    "vitest": "^3.1.0"
+  },
+  "license": "UNLICENSED",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/LeumasDev93/geografia-cv.git"
+  },
+  "engines": {
+    "node": ">=20"
+  }
+}
