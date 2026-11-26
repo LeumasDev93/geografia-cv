@@ -161,7 +161,7 @@ async function importar(b: Record<string, unknown>, pool: Awaited<ReturnType<Fon
     const nome = texto(l.nome); // como vem no ficheiro (o serviço formata ao mostrar)
     const nivel = Number(texto(l.nivel_detalhe) ?? texto(l.nivel));
     if (!id || !/^[0-9]{1,20}$/.test(id)) return invalidas.push({ linha: i + 1, id: id ?? undefined, motivo: "Código (id) em falta ou com letras" });
-    if (!nome || nome.length < 2) return invalidas.push({ linha: i + 1, id, motivo: "Nome em falta" });
+    if (!nome || nome.length < 2) return invalidas.push({ linha: i + 1, id, motivo: "Nome em falta ou com menos de 2 letras" });
     if (!(nivel >= 2 && nivel <= 6)) return invalidas.push({ linha: i + 1, id, motivo: "Nível (nivel_detalhe) tem de ser 2 a 6" });
     if (validas.has(id)) return invalidas.push({ linha: i + 1, id, motivo: "Código repetido no ficheiro" });
     const linha: LinhaTabela = { id, nome, pais: null, ilha: null, concelho: null, freguesia: null, zona: null, nome_norm: texto(l.nome_norm) ?? normalizar(nome).toUpperCase(), nivel_detalhe: String(nivel) };
