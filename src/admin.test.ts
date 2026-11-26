@@ -76,6 +76,15 @@ describe.skipIf(!url)("gestão (Portal 360)", () => {
     expect(so.totalAgora).toBe(10);
     await admin("POST", "/importar", { linhas: tabela, modo: "substituir", simular: false });
   });
+  it("várias instâncias (Vercel): a alteração feita numa aparece nas outras", async () => {
+    const outra = geografiaDaBase(url!, 60, 0); // verifica a versão em cada pedido
+    expect((await outra()).obter("2387")?.nome).toBe("Santiago");
+    const c = await (await admin("POST", "/locais", { nome: "Ilha Noutra Instancia", pai: "238" })).json();
+    expect((await outra()).obter(c.id)?.nome).toBe("Ilha Noutra Instancia");
+    await admin("DELETE", `/locais/${c.id}`);
+    expect((await outra()).obter(c.id)).toBeNull();
+    await (await outra.pool()).end();
+  });
   it("concelho novo numa ilha ganha código de 2 dígitos", async () => {
     const c = await (await admin("POST", "/locais", { nome: "Concelho Teste", pai: "2387" })).json();
     expect(c.id).toMatch(/^2387\d{2}$/);

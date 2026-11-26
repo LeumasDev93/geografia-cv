@@ -57,7 +57,7 @@ export function responder(caminho: string, query: Query = {}, g: Geografia = geo
 }
 
 /** Cabeçalhos: dados públicos que quase nunca mudam (cache de um dia). */
-export const CABECALHOS = { "content-type": "application/json; charset=utf-8", "cache-control": "public, max-age=300", "access-control-allow-origin": "*" };
+export const CABECALHOS = { "content-type": "application/json; charset=utf-8", "cache-control": "public, max-age=30", "access-control-allow-origin": "*" };
 
 interface PedidoNode {
   method?: string;

@@ -7,7 +7,7 @@
 import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { ligar, transacao } from "./bd.js";
+import { garantirMeta, ligar, marcarAlteracao, transacao } from "./bd.js";
 
 const url = process.env.DATABASE_URL;
 if (!url) {
@@ -57,6 +57,7 @@ CREATE OR REPLACE VIEW vw_lugares AS
 const pool = await ligar(url);
 try {
   await pool.query(DDL);
+  await garantirMeta(pool);
   const { rows } = await pool.query("SELECT count(*)::int AS n FROM geografia");
   const existentes = Number(rows[0]?.n ?? 0);
   if (existentes && !substituir) {
@@ -70,6 +71,7 @@ try {
       .filter((l) => /^\s*insert\s+into\s+geografia\b/i.test(l))
       .map((l) => l.trim().replace(/;\s*$/, "") + " ON CONFLICT (id) DO NOTHING;");
     await transacao(pool, async (c) => {
+      await marcarAlteracao(c);
       if (substituir) await c.query("DELETE FROM geografia");
       for (let i = 0; i < inserts.length; i += 300) await c.query(inserts.slice(i, i + 300).join("\n"));
     });

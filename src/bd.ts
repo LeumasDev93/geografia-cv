@@ -40,11 +40,28 @@ export async function lerLinhas(pool: Pool): Promise<Linha[]> {
   });
 }
 
+/** Tabela com a "versão" dos dados: cada alteração aumenta-a; todas as instâncias do serviço a seguem. */
+const META = `CREATE TABLE IF NOT EXISTS geografia_meta (id int PRIMARY KEY DEFAULT 1, versao bigint NOT NULL DEFAULT 0, alterado_em timestamptz NOT NULL DEFAULT now());
+INSERT INTO geografia_meta (id, versao) VALUES (1, 0) ON CONFLICT (id) DO NOTHING;`;
+export async function garantirMeta(c: { query: Consulta }) {
+  await c.query(META);
+}
+/** Marca que os dados mudaram (chamar na mesma transação da alteração, quando houver). */
+export async function marcarAlteracao(c: { query: Consulta }) {
+  await c.query("UPDATE geografia_meta SET versao = versao + 1, alterado_em = now() WHERE id = 1");
+}
+async function lerVersao(c: { query: Consulta }): Promise<string> {
+  const { rows } = await c.query("SELECT versao::text AS v FROM geografia_meta WHERE id = 1");
+  return String(rows[0]?.v ?? "0");
+}
+
 export interface FonteBase {
-  /** A geografia atual (recarrega quando passa o tempo). */
+  /** A geografia atual (vê a versão na base a cada `verificarSegundos` e recarrega se mudou). */
   (): Promise<Geografia>;
-  /** Volta a ler a base já (depois de uma alteração). */
+  /** Volta a ler a base já. */
   recarregar: () => Promise<Geografia>;
+  /** Marca a alteração (para as outras instâncias) e recarrega esta. */
+  alterado: () => Promise<Geografia>;
   /** Quando foi lida pela última vez. */
   carregadaEm: () => Date | null;
   /** Ligação à base (para a gestão). */
@@ -52,33 +69,57 @@ export interface FonteBase {
 }
 
 /**
- * Geografia carregada da base de dados, recarregada de tempos a tempos (para as alterações feitas
- * no Portal 360 aparecerem sem reiniciar). Se a base falhar depois de já ter dados, continua com os últimos.
+ * Geografia carregada da base de dados. Na Vercel há várias instâncias do serviço, cada uma com os dados
+ * em memória: todas consultam a versão (uma consulta pequena) no máximo a cada `verificarSegundos` e
+ * recarregam quando outra instância (ou o Portal 360) alterou os dados. De `recarregarMin` em
+ * `recarregarMin` minutos recarregam de qualquer forma. Se a base falhar, continuam com os últimos dados.
  */
-export function geografiaDaBase(url: string, recarregarMin = 60): FonteBase {
+export function geografiaDaBase(url: string, recarregarMin = 60, verificarSegundos = 10): FonteBase {
   let pool: Pool | null = null;
   let atual: Geografia | null = null;
   let quando = 0;
+  let versao: string | null = null;
+  let verificadoEm = 0;
   let aCarregar: Promise<Geografia> | null = null;
-  const obterPool = async () => (pool ??= await ligar(url));
+  let metaPronta = false;
+  const obterPool = async () => {
+    pool ??= await ligar(url);
+    if (!metaPronta) {
+      await garantirMeta(pool);
+      metaPronta = true;
+    }
+    return pool;
+  };
   const carregar = async () => {
-    const linhas = await lerLinhas(await obterPool());
+    const p = await obterPool();
+    const v = await lerVersao(p);
+    const linhas = await lerLinhas(p);
     if (!linhas.length) throw new Error("A tabela geografia está vazia (corra npm run migrate)");
     atual = new Geografia(linhas);
-    quando = Date.now();
+    versao = v;
+    quando = verificadoEm = Date.now();
     return atual;
   };
+  const recarregarUmaVez = () => (aCarregar ??= carregar().finally(() => (aCarregar = null)));
   const fonte = (async () => {
-    if (atual && Date.now() - quando < recarregarMin * 60_000) return atual;
-    aCarregar ??= carregar().finally(() => (aCarregar = null));
+    const agora = Date.now();
     try {
-      return await aCarregar;
+      if (!atual || agora - quando >= recarregarMin * 60_000) return await recarregarUmaVez();
+      if (agora - verificadoEm >= verificarSegundos * 1000) {
+        verificadoEm = agora;
+        if ((await lerVersao(await obterPool())) !== versao) return await recarregarUmaVez();
+      }
+      return atual;
     } catch (e) {
       if (atual) return atual;
       throw e;
     }
   }) as FonteBase;
   fonte.recarregar = () => carregar();
+  fonte.alterado = async () => {
+    await marcarAlteracao(await obterPool());
+    return carregar();
+  };
   fonte.carregadaEm = () => (quando ? new Date(quando) : null);
   fonte.pool = obterPool;
   return fonte;

@@ -11,7 +11,7 @@ import { comMonitor } from "./monitor.js";
 const porta = Number(process.env.PORT ?? 4100);
 const prefixo = process.env.PREFIXO ?? "/geografia";
 const url = process.env.DATABASE_URL;
-const fonte = url ? geografiaDaBase(url, Number(process.env.RECARREGAR_MINUTOS ?? 60)) : undefined;
+const fonte = url ? geografiaDaBase(url, Number(process.env.RECARREGAR_MINUTOS ?? 60), Number(process.env.VERIFICAR_SEGUNDOS ?? 10)) : undefined;
 
 if (fonte) {
   try {

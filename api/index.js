@@ -5,7 +5,7 @@ import { geografiaDaBase } from "../dist/bd.js";
 import { comMonitor } from "../dist/monitor.js";
 
 const prefixo = process.env.PREFIXO ?? "/geografia";
-const fonte = process.env.DATABASE_URL ? geografiaDaBase(process.env.DATABASE_URL, Number(process.env.RECARREGAR_MINUTOS ?? 60)) : undefined;
+const fonte = process.env.DATABASE_URL ? geografiaDaBase(process.env.DATABASE_URL, Number(process.env.RECARREGAR_MINUTOS ?? 60), Number(process.env.VERIFICAR_SEGUNDOS ?? 10)) : undefined;
 const mw0 = middlewareGeografia({ prefixo, geografia: fonte, fonteBase: fonte, chaveAdmin: process.env.CHAVE_ADMIN?.trim() || undefined });
 
 // Monitorização do Portal 360 (PORTAL_URL + PORTAL_APP_ID + MONITOR_CHAVE). Na Vercel envia no fim de cada pedido.

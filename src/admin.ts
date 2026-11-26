@@ -13,7 +13,7 @@
  */
 import { createHash, timingSafeEqual } from "node:crypto";
 import { NIVEIS, normalizar, type NomeNivel } from "./nucleo.js";
-import { transacao, type FonteBase } from "./bd.js";
+import { marcarAlteracao, transacao, type FonteBase } from "./bd.js";
 import type { Resposta } from "./http.js";
 
 const COLUNA: Record<number, string> = { 1: "pais", 2: "ilha", 3: "concelho", 4: "freguesia", 5: "zona" };
@@ -49,7 +49,7 @@ export async function responderAdmin(
     return { status: 200, corpo: { fonte: "base_de_dados", total: g.total, porNivel, carregadaEm: fonte.carregadaEm() } };
   }
   if (metodo === "POST" && partes[0] === "recarregar") {
-    const n = await fonte.recarregar();
+    const n = await fonte.alterado();
     return { status: 200, corpo: { total: n.total, carregadaEm: fonte.carregadaEm() } };
   }
 
@@ -97,7 +97,7 @@ export async function responderAdmin(
       `INSERT INTO geografia (id, nome, pais, ilha, concelho, freguesia, zona, nome_norm, nivel_detalhe) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
       [id, nomeBd, cols.pais, cols.ilha, cols.concelho, cols.freguesia, cols.zona, normalizar(nome).toUpperCase(), String(nivel)],
     );
-    const nova = await fonte.recarregar();
+    const nova = await fonte.alterado();
     return { status: 201, corpo: nova.detalhe(id) };
   }
 
@@ -110,14 +110,14 @@ export async function responderAdmin(
     const irmaos = local.pai ? g.filhos(local.pai) : [];
     if (irmaos.some((l) => l.id !== id && normalizar(l.nome) === normalizar(nome))) return erro(409, `Já existe «${nome}» no mesmo sítio`);
     await pool.query("UPDATE geografia SET nome = $2, nome_norm = $3 WHERE id = $1", [id, nomeBd, normalizar(nome).toUpperCase()]);
-    const nova = await fonte.recarregar();
+    const nova = await fonte.alterado();
     return { status: 200, corpo: nova.detalhe(id) };
   }
   if (metodo === "DELETE") {
     const filhos = g.filhos(id).length;
     if (filhos) return erro(409, `${local.nome} tem ${filhos} local(is) por baixo: remova-os primeiro`);
     await pool.query("DELETE FROM geografia WHERE id = $1", [id]);
-    await fonte.recarregar();
+    await fonte.alterado();
     return { status: 200, corpo: { ok: true } };
   }
   return erro(405, "Método não suportado");
@@ -215,6 +215,7 @@ async function importar(b: Record<string, unknown>, pool: Awaited<ReturnType<Fon
 
   try {
     await transacao(pool, async (c) => {
+      await marcarAlteracao(c);
       // Substituir: a tabela é esvaziada e fica só com o que vem no ficheiro.
       if (modo === "substituir") await c.query("DELETE FROM geografia");
       const todas = modo === "substituir" ? [...validas.values()] : [...novas, ...mudadas.map((m) => m.depois)];
