@@ -70,7 +70,11 @@ describe.skipIf(!url)("gestão (Portal 360)", () => {
     expect((await (await fetch(`${base}/238704001001005`)).json()).nome).toBe("Achada Sto Antonio Novo");
     // Substituir pela tabela original: apaga o lugar importado e repõe o nome.
     const rep = await (await admin("POST", "/importar", { linhas: tabela, modo: "substituir", simular: false })).json();
-    expect(rep).toMatchObject({ apagadas: 1, atualizadas: 1, totalAgora: 2363 });
+    expect(rep).toMatchObject({ apagadas: 1, atualizadas: 1, apagarTodas: 2364, gravadas: 2363, totalAgora: 2363 });
+    // Substituir com um ficheiro pequeno: fica só o que vem nele.
+    const so = await (await admin("POST", "/importar", { linhas: tabela.filter((l: { nivel_detalhe: string }) => Number(l.nivel_detalhe) <= 3), modo: "substituir", simular: false })).json();
+    expect(so.totalAgora).toBe(10);
+    await admin("POST", "/importar", { linhas: tabela, modo: "substituir", simular: false });
   });
   it("concelho novo numa ilha ganha código de 2 dígitos", async () => {
     const c = await (await admin("POST", "/locais", { nome: "Concelho Teste", pai: "2387" })).json();

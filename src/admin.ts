@@ -143,7 +143,7 @@ const PAI_DO_NIVEL: Record<number, (typeof COLS)[number]> = { 2: "pais", 3: "ilh
 /**
  * Importa linhas no formato da tabela (id, nome, pais, ilha, concelho, freguesia, zona, nivel_detalhe).
  *  - modo "atualizar" (por omissão): cria as novas e atualiza as que mudaram; não apaga nada.
- *  - modo "substituir": a tabela fica igual ao ficheiro (as que não vierem são apagadas).
+ *  - modo "substituir": apaga TODOS os dados atuais e grava só os do ficheiro.
  *  - simular: só devolve o resumo (nada é gravado).
  * Tudo numa transação: ou entra tudo, ou nada.
  */
@@ -202,6 +202,9 @@ async function importar(b: Record<string, unknown>, pool: Awaited<ReturnType<Fon
     atualizadas: mudadas.length,
     iguais,
     apagadas: apagar.length,
+    /** Substituir: apaga TODAS as linhas atuais e grava as do ficheiro. */
+    apagarTodas: modo === "substituir" ? atuais.size : 0,
+    gravadas: modo === "substituir" ? validas.size : novas.length + mudadas.length,
     exemplos: {
       novas: novas.slice(0, 10).map((l) => ({ id: l.id, nome: l.nome, nivel: Number(l.nivel_detalhe) })),
       atualizadas: mudadas.slice(0, 10).map((m) => ({ id: m.depois.id, antes: m.antes.nome, depois: m.depois.nome })),
@@ -212,8 +215,9 @@ async function importar(b: Record<string, unknown>, pool: Awaited<ReturnType<Fon
 
   try {
     await transacao(pool, async (c) => {
-      if (apagar.length) await c.query("DELETE FROM geografia WHERE id = ANY($1::text[])", [apagar]);
-      const todas = [...novas, ...mudadas.map((m) => m.depois)];
+      // Substituir: a tabela é esvaziada e fica só com o que vem no ficheiro.
+      if (modo === "substituir") await c.query("DELETE FROM geografia");
+      const todas = modo === "substituir" ? [...validas.values()] : [...novas, ...mudadas.map((m) => m.depois)];
       for (let i = 0; i < todas.length; i += 500) {
         const lote = todas.slice(i, i + 500);
         const col = (k: keyof LinhaTabela) => lote.map((l) => l[k]);
