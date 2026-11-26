@@ -68,9 +68,9 @@ interface RespostaNode {
  *   app.use(middlewareGeografia({ prefixo: "/geografia" }))           // Express
  *   http.createServer(middlewareGeografia({ prefixo: "" })).listen(…)  // Node puro
  */
-export function middlewareGeografia(opcoes: { prefixo?: string; geografia?: Geografia } = {}) {
+export function middlewareGeografia(opcoes: { prefixo?: string; geografia?: Geografia | (() => Geografia | Promise<Geografia>) } = {}) {
   const prefixo = (opcoes.prefixo ?? "/geografia").replace(/\/$/, "");
-  return (req: PedidoNode, res: RespostaNode, next?: (e?: unknown) => void) => {
+  return async (req: PedidoNode, res: RespostaNode, next?: (e?: unknown) => void) => {
     const url = new URL(req.url ?? "/", "http://local");
     const dentro = url.pathname === prefixo || url.pathname.startsWith(`${prefixo}/`);
     if (!dentro || (req.method && !["GET", "HEAD", "OPTIONS"].includes(req.method))) {
@@ -83,7 +83,14 @@ export function middlewareGeografia(opcoes: { prefixo?: string; geografia?: Geog
       res.statusCode = 204;
       return res.end();
     }
-    const r = responder(url.pathname.slice(prefixo.length), Object.fromEntries(url.searchParams), opcoes.geografia);
+    let g: Geografia | undefined;
+    try {
+      g = typeof opcoes.geografia === "function" ? await opcoes.geografia() : opcoes.geografia;
+    } catch (e) {
+      res.statusCode = 503;
+      return res.end(JSON.stringify({ erro: "Dados da regionalização indisponíveis", detalhe: (e as Error).message }));
+    }
+    const r = responder(url.pathname.slice(prefixo.length), Object.fromEntries(url.searchParams), g);
     res.statusCode = r.status;
     res.end(req.method === "HEAD" ? undefined : JSON.stringify(r.corpo));
   };

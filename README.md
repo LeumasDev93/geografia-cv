@@ -66,12 +66,27 @@ npm run build
 npm start            # PORT=4100 por omissão → http://localhost:4100/geografia/concelhos
 ```
 
+## Base de dados (opcional)
+
+Com `DATABASE_URL` (ex.: Neon), os dados vêm da tabela `geografia` — o mesmo formato do dump oficial —
+e o serviço volta a lê-la a cada `RECARREGAR_MINUTOS` (por omissão 60), para as alterações aparecerem sem reiniciar.
+
+```bash
+cp .env.example .env        # e ponha o DATABASE_URL
+npm run migrate             # cria a tabela e carrega dados/geografia.sql (se estiver vazia)
+npm start                   # "… (dados da base de dados)"
+```
+
+- `npm run migrate` pode correr várias vezes: não duplica nem apaga.
+- `npm run migrate:substituir` apaga os dados da tabela e volta a carregar o dump (para atualizar a regionalização).
+- Sem `DATABASE_URL`, usa os dados incluídos no pacote.
+
 ## Publicar
 
 - **Vercel:** importar este repositório (o `vercel.json` já encaminha tudo para `api/index.js`).
   Fica em `https://<projeto>.vercel.app/geografia/...`.
 - **Docker:** `docker build -t geografia-cv . && docker run -p 4100:4100 geografia-cv`.
-- Variáveis: `PORT` (servidor autónomo) e `PREFIXO` (por omissão `/geografia`).
+- Variáveis: `DATABASE_URL` (opcional), `PORT` (servidor autónomo), `PREFIXO` (por omissão `/geografia`) e `RECARREGAR_MINUTOS`.
 
 ## Usar noutro projeto
 

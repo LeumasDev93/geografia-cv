@@ -37,6 +37,23 @@ export function normalizar(s: string): string {
     .join(" ");
 }
 
+const PEQUENAS = new Set(["de", "da", "do", "das", "dos", "e", "d’"]);
+/** "ACHADA SANTO ANTÓNIO" → "Achada Santo António"; "PONTA D’ACHADA" → "Ponta d’Achada". */
+export function formatarNome(s: string): string {
+  return s
+    .replace(/[\u0091\u0092\u2018\u2019\u00B4`']/g, "’")
+    .replace(/\s+/g, " ")
+    .trim()
+    .toLocaleLowerCase("pt")
+    .split(" ")
+    .map((p, i) => {
+      if (i > 0 && PEQUENAS.has(p)) return p;
+      if (/^d’./.test(p)) return `d’${p.charAt(2).toLocaleUpperCase("pt")}${p.slice(3)}`;
+      return p.charAt(0).toLocaleUpperCase("pt") + p.slice(1);
+    })
+    .join(" ");
+}
+
 export class Geografia {
   private readonly porId = new Map<string, Local>();
   private readonly filhosDe = new Map<string, Local[]>();
