@@ -31,6 +31,27 @@ CREATE TABLE IF NOT EXISTS geografia (
 );
 CREATE INDEX IF NOT EXISTS geografia_nivel ON geografia (nivel_detalhe);
 CREATE INDEX IF NOT EXISTS geografia_concelho ON geografia (concelho);
+
+-- Vistas por nível (para relatórios e consultas diretas): os dados continuam só na tabela geografia.
+CREATE OR REPLACE VIEW vw_ilhas AS
+  SELECT g.id, g.nome, g.pais FROM geografia g WHERE g.nivel_detalhe = '2';
+CREATE OR REPLACE VIEW vw_concelhos AS
+  SELECT g.id, g.nome, g.ilha, i.nome AS ilha_nome
+    FROM geografia g LEFT JOIN geografia i ON i.id = g.ilha
+   WHERE g.nivel_detalhe = '3';
+CREATE OR REPLACE VIEW vw_freguesias AS
+  SELECT g.id, g.nome, g.concelho, c.nome AS concelho_nome, g.ilha, i.nome AS ilha_nome
+    FROM geografia g LEFT JOIN geografia c ON c.id = g.concelho LEFT JOIN geografia i ON i.id = g.ilha
+   WHERE g.nivel_detalhe = '4';
+CREATE OR REPLACE VIEW vw_zonas AS
+  SELECT g.id, g.nome, g.freguesia, f.nome AS freguesia_nome, g.concelho, c.nome AS concelho_nome, g.ilha, i.nome AS ilha_nome
+    FROM geografia g LEFT JOIN geografia f ON f.id = g.freguesia LEFT JOIN geografia c ON c.id = g.concelho LEFT JOIN geografia i ON i.id = g.ilha
+   WHERE g.nivel_detalhe = '5';
+CREATE OR REPLACE VIEW vw_lugares AS
+  SELECT g.id, g.nome, g.zona, z.nome AS zona_nome, g.freguesia, f.nome AS freguesia_nome, g.concelho, c.nome AS concelho_nome, g.ilha, i.nome AS ilha_nome
+    FROM geografia g LEFT JOIN geografia z ON z.id = g.zona LEFT JOIN geografia f ON f.id = g.freguesia
+    LEFT JOIN geografia c ON c.id = g.concelho LEFT JOIN geografia i ON i.id = g.ilha
+   WHERE g.nivel_detalhe = '6';
 `;
 
 const pool = await ligar(url);
@@ -39,7 +60,7 @@ try {
   const { rows } = await pool.query("SELECT count(*)::int AS n FROM geografia");
   const existentes = Number(rows[0]?.n ?? 0);
   if (existentes && !substituir) {
-    console.log(`Tabela geografia já tem ${existentes} registos. Nada a fazer (use --substituir para recarregar o dump).`);
+    console.log(`Tabela geografia já tem ${existentes} registos; vistas vw_* atualizadas (use --substituir para recarregar o dump).`);
   } else {
     const bytes = readFileSync(ficheiro);
     let texto = bytes.toString("utf8");

@@ -78,6 +78,10 @@ npm start                   # "… (dados da base de dados)"
 ```
 
 - `npm run migrate` pode correr várias vezes: não duplica nem apaga.
+- Cria também **vistas por nível**, com os nomes dos níveis de cima, para relatórios e consultas diretas:
+  `vw_ilhas`, `vw_concelhos`, `vw_freguesias`, `vw_zonas`, `vw_lugares`
+  (ex.: `SELECT nome, zona_nome, concelho_nome FROM vw_lugares WHERE concelho = '238704'`).
+  Os dados continuam só na tabela `geografia`.
 - `npm run migrate:substituir` apaga os dados da tabela e volta a carregar o dump (para atualizar a regionalização).
 - Sem `DATABASE_URL`, usa os dados incluídos no pacote.
 
