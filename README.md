@@ -135,7 +135,7 @@ Ou consumir só por HTTP, apontando para o serviço publicado (é o que faz o Ci
 
 ## Swagger
 
-- Documentação interativa: **`/geografia/docs`** (ex.: https://geografia-cv.vercel.app/geografia/docs) — dá para experimentar cada rota ("Try it out"); para a gestão, carregue em **Authorize** e cole a `CHAVE_ADMIN`.
+- Documentação interativa: **`/geografia/docs`** (ex.: https://geografia-cv.vercel.app/geografia/docs) — dá para experimentar cada rota ("Try it out"). Só mostra as rotas públicas; a gestão (`/admin/...`) é só para o Portal 360.
 - Especificação OpenAPI 3: **`/geografia/openapi.json`** (também em `docs/openapi.json`, para importar no Postman, Insomnia, etc.).
 
 ## Postman

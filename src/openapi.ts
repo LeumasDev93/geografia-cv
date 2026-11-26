@@ -23,7 +23,6 @@ const porNivel = (plural: string, n: string, exemplo?: string) => ({
     responses: { 200: lista, 400: erro("Código inválido em `dentro`") },
   },
 });
-const admin = { security: [{ chaveAdmin: [] }], tags: ["Gestão (Portal 360)"] };
 
 export function especificacao(prefixo: string) {
   return {
@@ -34,7 +33,6 @@ export function especificacao(prefixo: string) {
       description:
         "Middleware com a regionalização oficial (ilha → concelho → freguesia → zona → lugar).\n\n" +
         "- As leituras são **públicas** (GET, JSON, CORS aberto, cache de 5 min).\n" +
-        "- A **gestão** (`/admin/...`) é feita pelo Portal 360 com `Authorization: Bearer <CHAVE_ADMIN>` e precisa de base de dados.\n" +
         "- Pesquisa sem acentos e sem maiúsculas.",
     },
     servers: [{ url: prefixo || "/", description: "Este servidor" }],
@@ -43,7 +41,6 @@ export function especificacao(prefixo: string) {
       { name: "Locais", description: "Um local pelo código" },
       { name: "Pesquisa" },
       { name: "Serviço", description: "Saúde e níveis" },
-      { name: "Gestão (Portal 360)", description: "Criar, renomear e remover (com chave)" },
     ],
     paths: {
       "/saude": {
@@ -101,97 +98,8 @@ export function especificacao(prefixo: string) {
       "/{codigo}/filhos": {
         get: { tags: ["Locais"], summary: "Filhos diretos", parameters: [codigo], responses: { 200: lista, 404: erro("Não encontrado") } },
       },
-      "/admin/estado": {
-        get: {
-          ...admin,
-          summary: "Estado da base de dados",
-          responses: {
-            200: {
-              description: "Totais",
-              content: {
-                "application/json": {
-                  schema: { type: "object", properties: { fonte: { type: "string", example: "base_de_dados" }, total: { type: "integer" }, porNivel: { type: "object", additionalProperties: { type: "integer" } }, carregadaEm: { type: "string", format: "date-time" } } },
-                },
-              },
-            },
-            401: erro("Chave inválida"),
-            503: erro("Gestão desligada (sem CHAVE_ADMIN)"),
-          },
-        },
-      },
-      "/admin/locais": {
-        post: {
-          ...admin,
-          summary: "Criar um local",
-          description: "Cria um filho de `pai`. Para uma ilha nova, `pai` = `238` (Cabo Verde). Sem `id`, o código é gerado.",
-          requestBody: {
-            required: true,
-            content: {
-              "application/json": {
-                schema: { type: "object", required: ["nome", "pai"], properties: { nome: { type: "string", minLength: 2, maxLength: 120, example: "Bairro Novo" }, pai: { type: "string", example: "238704001001" }, id: { type: "string", example: "" } } },
-              },
-            },
-          },
-          responses: { 201: { description: "Criado", content: { "application/json": { schema: { $ref: "#/components/schemas/LocalDetalhado" } } } }, 400: erro("Dados inválidos"), 401: erro("Chave inválida"), 409: erro("Já existe") },
-        },
-      },
-      "/admin/locais/{codigo}": {
-        patch: {
-          ...admin,
-          summary: "Renomear",
-          parameters: [codigo],
-          requestBody: { required: true, content: { "application/json": { schema: { type: "object", required: ["nome"], properties: { nome: { type: "string", example: "Achada Santo António" } } } } } },
-          responses: { 200: { description: "Renomeado", content: { "application/json": { schema: { $ref: "#/components/schemas/LocalDetalhado" } } } }, 401: erro("Chave inválida"), 404: erro("Não encontrado"), 409: erro("Nome repetido") },
-        },
-        delete: {
-          ...admin,
-          summary: "Remover (só sem locais por baixo)",
-          parameters: [codigo],
-          responses: { 200: { description: "Removido" }, 401: erro("Chave inválida"), 404: erro("Não encontrado"), 409: erro("Tem locais por baixo") },
-        },
-      },
-      "/admin/exportar": {
-        get: { ...admin, summary: "Exportar a tabela inteira", description: "Todas as linhas no formato da tabela `geografia` (id, nome, pais, ilha, concelho, freguesia, zona, nome_norm, nivel_detalhe).", responses: { 200: { description: "Linhas" }, 401: erro("Chave inválida") } },
-      },
-      "/admin/importar": {
-        post: {
-          ...admin,
-          summary: "Importar linhas (atualizar ou substituir)",
-          description:
-            "Linhas no formato da tabela. **atualizar**: cria as novas e atualiza as que mudaram (não apaga). **substituir**: a tabela fica igual ao envio. " +
-            "Com `simular: true` (por omissão) só devolve o resumo. Se alguma linha for inválida (422), nada é gravado.",
-          requestBody: {
-            required: true,
-            content: {
-              "application/json": {
-                schema: {
-                  type: "object",
-                  required: ["linhas"],
-                  properties: {
-                    modo: { type: "string", enum: ["atualizar", "substituir"], default: "atualizar" },
-                    simular: { type: "boolean", default: true },
-                    linhas: {
-                      type: "array",
-                      items: {
-                        type: "object",
-                        required: ["id", "nome", "nivel_detalhe"],
-                        properties: { id: { type: "string" }, nome: { type: "string" }, pais: { type: "string" }, ilha: { type: "string" }, concelho: { type: "string" }, freguesia: { type: "string" }, zona: { type: "string" }, nivel_detalhe: { type: "string", example: "6" } },
-                      },
-                    },
-                  },
-                },
-              },
-            },
-          },
-          responses: { 200: { description: "Resumo (novas, atualizadas, iguais, apagadas)" }, 401: erro("Chave inválida"), 422: erro("Linhas inválidas: nada foi gravado") },
-        },
-      },
-      "/admin/recarregar": {
-        post: { ...admin, summary: "Voltar a ler a base de dados", responses: { 200: { description: "Recarregado" }, 401: erro("Chave inválida") } },
-      },
     },
     components: {
-      securitySchemes: { chaveAdmin: { type: "http", scheme: "bearer", description: "A CHAVE_ADMIN do serviço" } },
       schemas: {
         Local,
         LocalDetalhado: {
@@ -215,6 +123,6 @@ export function paginaSwagger(urlEspecificacao: string) {
 <style>body{margin:0}.topbar{display:none}</style></head>
 <body><div id="swagger"></div>
 <script src="https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.17.14/swagger-ui-bundle.js"></script>
-<script>window.ui = SwaggerUIBundle({ url: ${JSON.stringify(urlEspecificacao)}, dom_id: "#swagger", deepLinking: true, docExpansion: "list", persistAuthorization: true });</script>
+<script>window.ui = SwaggerUIBundle({ url: ${JSON.stringify(urlEspecificacao)}, dom_id: "#swagger", deepLinking: true, docExpansion: "list", defaultModelsExpandDepth: -1 });</script>
 </body></html>`;
 }
