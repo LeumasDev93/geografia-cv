@@ -49,6 +49,10 @@ describe("http", () => {
     expect(r.headers.get("cache-control")).toContain("max-age");
     expect((await r.json())[0].nome).toBe("Praia");
     expect((await fetch(`http://localhost:${porta}/outra`)).status).toBe(418);
+    const spec = await (await fetch(`http://localhost:${porta}/geo/openapi.json`)).json();
+    expect(spec.openapi).toBe("3.0.3");
+    expect(spec.servers[0].url).toBe("/geo");
+    expect((await fetch(`http://localhost:${porta}/geo/docs`)).headers.get("content-type")).toContain("text/html");
     srv.close();
   });
 });

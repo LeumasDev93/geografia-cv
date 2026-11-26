@@ -129,6 +129,11 @@ npm install github:LeumasDev93/geografia-cv
 
 Ou consumir só por HTTP, apontando para o serviço publicado (é o que faz o Cidade Limpa, com `GEOGRAFIA_URL`).
 
+## Swagger
+
+- Documentação interativa: **`/geografia/docs`** (ex.: https://geografia-cv.vercel.app/geografia/docs) — dá para experimentar cada rota ("Try it out"); para a gestão, carregue em **Authorize** e cole a `CHAVE_ADMIN`.
+- Especificação OpenAPI 3: **`/geografia/openapi.json`** (também em `docs/openapi.json`, para importar no Postman, Insomnia, etc.).
+
 ## Postman
 
 Coleção com todas as rotas em `docs/geografia-cv.postman_collection.json` (Postman → Import). Mude a variável `base_url` para o endereço publicado.

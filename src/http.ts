@@ -3,6 +3,7 @@
  * `responder(caminho, query)` devolve { status, corpo }; os adaptadores (Node/Express/Connect, Fastify)
  * só tratam de ler o pedido e escrever a resposta.
  *
+ *   GET /docs                 → Swagger UI; /openapi.json → especificação OpenAPI
  *   GET /saude                → { estado: "ok", total } (monitorização)
  *   GET /niveis
  *   GET /ilhas | /concelhos | /freguesias | /zonas | /lugares   ?dentro=<código>
@@ -13,6 +14,7 @@
 import { NIVEIS, ROTULO_NIVEL, geografia, type Geografia, type NomeNivel } from "./nucleo.js";
 import { lerCorpo, responderAdmin } from "./admin.js";
 import type { FonteBase } from "./bd.js";
+import { especificacao, paginaSwagger } from "./openapi.js";
 
 export interface Resposta {
   status: number;
@@ -100,6 +102,18 @@ export function middlewareGeografia(
       if (next) return next();
       res.statusCode = 404;
       return res.end();
+    }
+    // Documentação: {prefixo}/openapi.json e {prefixo}/docs (Swagger UI)
+    if (url.pathname === `${prefixo}/openapi.json` || url.pathname === `${prefixo}/docs`) {
+      res.setHeader("access-control-allow-origin", "*");
+      res.setHeader("cache-control", "public, max-age=300");
+      res.statusCode = 200;
+      if (url.pathname.endsWith(".json")) {
+        res.setHeader("content-type", "application/json; charset=utf-8");
+        return res.end(JSON.stringify(especificacao(prefixo)));
+      }
+      res.setHeader("content-type", "text/html; charset=utf-8");
+      return res.end(paginaSwagger(`${prefixo}/openapi.json`));
     }
     for (const [n, v] of Object.entries(CABECALHOS)) res.setHeader(n, v);
     if (req.method === "OPTIONS") {

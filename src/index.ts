@@ -3,3 +3,4 @@ export { responder, middlewareGeografia, pluginFastifyGeografia, CABECALHOS, typ
 export { responderAdmin } from "./admin.js";
 export { geografiaDaBase, type FonteBase } from "./bd.js";
 export { comMonitor } from "./monitor.js";
+export { especificacao, paginaSwagger } from "./openapi.js";

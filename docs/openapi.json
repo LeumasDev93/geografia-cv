@@ -1,0 +1,921 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "geografia-cv — Regionalização de Cabo Verde",
+    "version": "1.0.0",
+    "description": "Middleware com a regionalização oficial (ilha → concelho → freguesia → zona → lugar).\n\n- As leituras são **públicas** (GET, JSON, CORS aberto, cache de 5 min).\n- A **gestão** (`/admin/...`) é feita pelo Portal 360 com `Authorization: Bearer <CHAVE_ADMIN>` e precisa de base de dados.\n- Pesquisa sem acentos e sem maiúsculas."
+  },
+  "servers": [
+    {
+      "url": "https://geografia-cv.vercel.app/geografia",
+      "description": "Este servidor"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Listas",
+      "description": "Locais por nível"
+    },
+    {
+      "name": "Locais",
+      "description": "Um local pelo código"
+    },
+    {
+      "name": "Pesquisa"
+    },
+    {
+      "name": "Serviço",
+      "description": "Saúde e níveis"
+    },
+    {
+      "name": "Gestão (Portal 360)",
+      "description": "Criar, renomear e remover (com chave)"
+    }
+  ],
+  "paths": {
+    "/saude": {
+      "get": {
+        "tags": [
+          "Serviço"
+        ],
+        "summary": "Saúde (monitorização)",
+        "responses": {
+          "200": {
+            "description": "A funcionar",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "estado": {
+                      "type": "string",
+                      "example": "ok"
+                    },
+                    "total": {
+                      "type": "integer",
+                      "example": 2363
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Sem dados",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/niveis": {
+      "get": {
+        "tags": [
+          "Serviço"
+        ],
+        "summary": "Níveis da regionalização",
+        "responses": {
+          "200": {
+            "description": "Os 6 níveis",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "chave": {
+                        "type": "string",
+                        "enum": [
+                          "pais",
+                          "ilha",
+                          "concelho",
+                          "freguesia",
+                          "zona",
+                          "lugar"
+                        ]
+                      },
+                      "nivel": {
+                        "type": "integer"
+                      },
+                      "rotulo": {
+                        "type": "string"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/ilhas": {
+      "get": {
+        "tags": [
+          "Listas"
+        ],
+        "summary": "Ilhas",
+        "description": "Todos os locais de nível **ilha**, opcionalmente só dentro de um local de cima.",
+        "parameters": [
+          {
+            "name": "dentro",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^[0-9]{1,20}$"
+            },
+            "description": "Código de um local de cima (ex.: 238704 = Praia)",
+            "example": "238"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de locais",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Local"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Código inválido em `dentro`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/concelhos": {
+      "get": {
+        "tags": [
+          "Listas"
+        ],
+        "summary": "Concelhos",
+        "description": "Todos os locais de nível **concelho**, opcionalmente só dentro de um local de cima.",
+        "parameters": [
+          {
+            "name": "dentro",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^[0-9]{1,20}$"
+            },
+            "description": "Código de um local de cima (ex.: 238704 = Praia)",
+            "example": "2387"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de locais",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Local"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Código inválido em `dentro`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/freguesias": {
+      "get": {
+        "tags": [
+          "Listas"
+        ],
+        "summary": "Freguesias",
+        "description": "Todos os locais de nível **freguesia**, opcionalmente só dentro de um local de cima.",
+        "parameters": [
+          {
+            "name": "dentro",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^[0-9]{1,20}$"
+            },
+            "description": "Código de um local de cima (ex.: 238704 = Praia)",
+            "example": "238704"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de locais",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Local"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Código inválido em `dentro`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/zonas": {
+      "get": {
+        "tags": [
+          "Listas"
+        ],
+        "summary": "Zonas",
+        "description": "Todos os locais de nível **zona**, opcionalmente só dentro de um local de cima.",
+        "parameters": [
+          {
+            "name": "dentro",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^[0-9]{1,20}$"
+            },
+            "description": "Código de um local de cima (ex.: 238704 = Praia)",
+            "example": "238704"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de locais",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Local"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Código inválido em `dentro`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/lugares": {
+      "get": {
+        "tags": [
+          "Listas"
+        ],
+        "summary": "Lugares",
+        "description": "Todos os locais de nível **lugar**, opcionalmente só dentro de um local de cima.",
+        "parameters": [
+          {
+            "name": "dentro",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^[0-9]{1,20}$"
+            },
+            "description": "Código de um local de cima (ex.: 238704 = Praia)",
+            "example": "238704001001"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de locais",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Local"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Código inválido em `dentro`",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/pesquisa": {
+      "get": {
+        "tags": [
+          "Pesquisa"
+        ],
+        "summary": "Pesquisar por nome",
+        "description": "Primeiro os que começam pelo texto, depois os que o contêm.",
+        "parameters": [
+          {
+            "name": "q",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "minLength": 2,
+              "maxLength": 80
+            },
+            "example": "palmarejo"
+          },
+          {
+            "name": "nivel",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string"
+            },
+            "description": "Um ou vários níveis separados por vírgula",
+            "example": "zona,lugar"
+          },
+          {
+            "name": "dentro",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "pattern": "^[0-9]{1,20}$"
+            },
+            "description": "Código de um local de cima (ex.: 238704 = Praia)",
+            "example": "238704"
+          },
+          {
+            "name": "limite",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de locais",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Local"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Texto curto ou parâmetros inválidos",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/{codigo}": {
+      "get": {
+        "tags": [
+          "Locais"
+        ],
+        "summary": "Um local, com o caminho completo",
+        "parameters": [
+          {
+            "name": "codigo",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[0-9]{1,20}$"
+            },
+            "example": "238704"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "O local",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LocalDetalhado"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Não encontrado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/{codigo}/filhos": {
+      "get": {
+        "tags": [
+          "Locais"
+        ],
+        "summary": "Filhos diretos",
+        "parameters": [
+          {
+            "name": "codigo",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[0-9]{1,20}$"
+            },
+            "example": "238704"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Lista de locais",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Local"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Não encontrado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/estado": {
+      "get": {
+        "security": [
+          {
+            "chaveAdmin": []
+          }
+        ],
+        "tags": [
+          "Gestão (Portal 360)"
+        ],
+        "summary": "Estado da base de dados",
+        "responses": {
+          "200": {
+            "description": "Totais",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "fonte": {
+                      "type": "string",
+                      "example": "base_de_dados"
+                    },
+                    "total": {
+                      "type": "integer"
+                    },
+                    "porNivel": {
+                      "type": "object",
+                      "additionalProperties": {
+                        "type": "integer"
+                      }
+                    },
+                    "carregadaEm": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Chave inválida",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Gestão desligada (sem CHAVE_ADMIN)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/locais": {
+      "post": {
+        "security": [
+          {
+            "chaveAdmin": []
+          }
+        ],
+        "tags": [
+          "Gestão (Portal 360)"
+        ],
+        "summary": "Criar um local",
+        "description": "Cria um filho de `pai`. Para uma ilha nova, `pai` = `238` (Cabo Verde). Sem `id`, o código é gerado.",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "nome",
+                  "pai"
+                ],
+                "properties": {
+                  "nome": {
+                    "type": "string",
+                    "minLength": 2,
+                    "maxLength": 120,
+                    "example": "Bairro Novo"
+                  },
+                  "pai": {
+                    "type": "string",
+                    "example": "238704001001"
+                  },
+                  "id": {
+                    "type": "string",
+                    "example": ""
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Criado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LocalDetalhado"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Dados inválidos",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Chave inválida",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Já existe",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/locais/{codigo}": {
+      "patch": {
+        "security": [
+          {
+            "chaveAdmin": []
+          }
+        ],
+        "tags": [
+          "Gestão (Portal 360)"
+        ],
+        "summary": "Renomear",
+        "parameters": [
+          {
+            "name": "codigo",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[0-9]{1,20}$"
+            },
+            "example": "238704"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "nome"
+                ],
+                "properties": {
+                  "nome": {
+                    "type": "string",
+                    "example": "Achada Santo António"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Renomeado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LocalDetalhado"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Chave inválida",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Não encontrado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Nome repetido",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "security": [
+          {
+            "chaveAdmin": []
+          }
+        ],
+        "tags": [
+          "Gestão (Portal 360)"
+        ],
+        "summary": "Remover (só sem locais por baixo)",
+        "parameters": [
+          {
+            "name": "codigo",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^[0-9]{1,20}$"
+            },
+            "example": "238704"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Removido"
+          },
+          "401": {
+            "description": "Chave inválida",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Não encontrado",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Tem locais por baixo",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/recarregar": {
+      "post": {
+        "security": [
+          {
+            "chaveAdmin": []
+          }
+        ],
+        "tags": [
+          "Gestão (Portal 360)"
+        ],
+        "summary": "Voltar a ler a base de dados",
+        "responses": {
+          "200": {
+            "description": "Recarregado"
+          },
+          "401": {
+            "description": "Chave inválida",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Erro"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "securitySchemes": {
+      "chaveAdmin": {
+        "type": "http",
+        "scheme": "bearer",
+        "description": "A CHAVE_ADMIN do serviço"
+      }
+    },
+    "schemas": {
+      "Local": {
+        "type": "object",
+        "required": [
+          "id",
+          "nome",
+          "nivel",
+          "pai"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "238704",
+            "description": "Código oficial"
+          },
+          "nome": {
+            "type": "string",
+            "example": "Praia"
+          },
+          "nivel": {
+            "type": "string",
+            "enum": [
+              "pais",
+              "ilha",
+              "concelho",
+              "freguesia",
+              "zona",
+              "lugar"
+            ],
+            "example": "concelho"
+          },
+          "pai": {
+            "type": "string",
+            "nullable": true,
+            "example": "2387",
+            "description": "Código do nível de cima (ilha: 238 = Cabo Verde)"
+          }
+        }
+      },
+      "LocalDetalhado": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/Local"
+          },
+          {
+            "type": "object",
+            "properties": {
+              "caminho": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/Local"
+                }
+              },
+              "filhos": {
+                "type": "integer",
+                "example": 1
+              }
+            }
+          }
+        ]
+      },
+      "Erro": {
+        "type": "object",
+        "properties": {
+          "erro": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  }
+}
