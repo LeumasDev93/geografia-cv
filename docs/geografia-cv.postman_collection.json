@@ -1,0 +1,776 @@
+{
+  "info": {
+    "name": "geografia-cv — Regionalização de Cabo Verde",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Middleware de regionalização (ilha → concelho → freguesia → zona → lugar). Todas as rotas são GET, públicas e devolvem JSON.\n\nMude a variável `base_url` para o endereço publicado (ex.: https://geografia-cv.vercel.app/geografia)."
+  },
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:4100/geografia"
+    },
+    {
+      "key": "ilha",
+      "value": "2387"
+    },
+    {
+      "key": "concelho",
+      "value": "238704"
+    },
+    {
+      "key": "freguesia",
+      "value": "238704001"
+    },
+    {
+      "key": "zona",
+      "value": "238704001001"
+    },
+    {
+      "key": "lugar",
+      "value": "238704001001005"
+    }
+  ],
+  "item": [
+    {
+      "name": "Níveis",
+      "item": [
+        {
+          "name": "Listar níveis",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/niveis",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "niveis"
+              ]
+            },
+            "description": "Os 6 níveis: país, ilha, concelho, freguesia, zona, lugar."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Listas por nível",
+      "item": [
+        {
+          "name": "Ilhas",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/ilhas",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "ilhas"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Concelhos (todos)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/concelhos",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "concelhos"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Concelhos de uma ilha",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/concelhos?dentro={{ilha}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "concelhos"
+              ],
+              "query": [
+                {
+                  "key": "dentro",
+                  "value": "{{ilha}}",
+                  "description": "Código da ilha (Santiago = 2387)"
+                }
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Freguesias de um concelho",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/freguesias?dentro={{concelho}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "freguesias"
+              ],
+              "query": [
+                {
+                  "key": "dentro",
+                  "value": "{{concelho}}",
+                  "description": "Código do concelho (Praia = 238704)"
+                }
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Zonas de um concelho",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/zonas?dentro={{concelho}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "zonas"
+              ],
+              "query": [
+                {
+                  "key": "dentro",
+                  "value": "{{concelho}}"
+                }
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Zonas de uma freguesia",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/zonas?dentro={{freguesia}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "zonas"
+              ],
+              "query": [
+                {
+                  "key": "dentro",
+                  "value": "{{freguesia}}"
+                }
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Lugares de uma zona",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/lugares?dentro={{zona}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "lugares"
+              ],
+              "query": [
+                {
+                  "key": "dentro",
+                  "value": "{{zona}}"
+                }
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Lugares de um concelho",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/lugares?dentro={{concelho}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "lugares"
+              ],
+              "query": [
+                {
+                  "key": "dentro",
+                  "value": "{{concelho}}"
+                }
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Local por código",
+      "item": [
+        {
+          "name": "Detalhe de um concelho (Praia)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/{{concelho}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "{{concelho}}"
+              ]
+            },
+            "description": "Devolve o local, o caminho completo (do topo até ele) e o número de filhos."
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Detalhe de um lugar (Achada Santo António)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/{{lugar}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "{{lugar}}"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Filhos diretos de um concelho",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/{{concelho}}/filhos",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "{{concelho}}",
+                "filhos"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Filhos diretos de uma zona",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/{{zona}}/filhos",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "{{zona}}",
+                "filhos"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Pesquisa",
+      "item": [
+        {
+          "name": "Pesquisar por nome",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/pesquisa?q=palmarejo",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "pesquisa"
+              ],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "palmarejo",
+                  "description": "Pelo menos 2 letras; ignora acentos e maiúsculas"
+                }
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Pesquisar sem acentos (concelho)",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/pesquisa?q=sao lourenco&nivel=concelho",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "pesquisa"
+              ],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "sao lourenco"
+                },
+                {
+                  "key": "nivel",
+                  "value": "concelho"
+                }
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Pesquisar zonas e lugares dentro da Praia",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/pesquisa?q=achada&nivel=zona,lugar&dentro={{concelho}}&limite=20",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "pesquisa"
+              ],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "achada"
+                },
+                {
+                  "key": "nivel",
+                  "value": "zona,lugar",
+                  "description": "Um ou vários níveis separados por vírgula"
+                },
+                {
+                  "key": "dentro",
+                  "value": "{{concelho}}"
+                },
+                {
+                  "key": "limite",
+                  "value": "20",
+                  "description": "1 a 100 (por omissão 20)"
+                }
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Responde 200', () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Erros (exemplos)",
+      "item": [
+        {
+          "name": "Código inexistente → 404",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/999",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "999"
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('404', () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Pesquisa curta → 400",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/pesquisa?q=a",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "pesquisa"
+              ],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "a"
+                }
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('400', () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "'dentro' inválido → 400",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/concelhos?dentro=abc",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "concelhos"
+              ],
+              "query": [
+                {
+                  "key": "dentro",
+                  "value": "abc"
+                }
+              ]
+            },
+            "description": ""
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('400', () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

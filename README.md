@@ -96,6 +96,10 @@ npm install github:LeumasDev93/geografia-cv
 
 Ou consumir só por HTTP, apontando para o serviço publicado (é o que faz o Cidade Limpa, com `GEOGRAFIA_URL`).
 
+## Postman
+
+Coleção com todas as rotas em `docs/geografia-cv.postman_collection.json` (Postman → Import). Mude a variável `base_url` para o endereço publicado.
+
 ## Atualizar os dados
 
 Substitua `dados/geografia.sql` pelo dump novo (UTF-8 ou Latin-1, com `INSERT INTO geografia (...) VALUES (...)`) e corra:
