@@ -36,6 +36,7 @@ g.encontrar("ACHADA SANTO ANTONIO", { dentro: "238704" }); // liga um nome ao c�
 Rotas (todas `GET`, JSON, `Cache-Control` de 1 dia, CORS aberto):
 
 ```
+/saude                → { estado: "ok", total }  (monitorização do Portal 360)
 /niveis
 /ilhas  /concelhos  /freguesias  /zonas  /lugares      ?dentro=<código>
 /pesquisa?q=<texto>&nivel=zona,lugar&dentro=<código>&limite=20

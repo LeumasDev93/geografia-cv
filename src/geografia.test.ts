@@ -36,6 +36,7 @@ describe("http", () => {
     expect(responder("/238704").corpo).toMatchObject({ nome: "Praia", nivel: "concelho" });
     expect(responder("/238704/filhos").status).toBe(200);
     expect(responder("/999").status).toBe(404);
+    expect(responder("/saude")).toMatchObject({ status: 200, corpo: { estado: "ok" } });
     expect(responder("/pesquisa", { q: "a" }).status).toBe(400);
     expect(responder("/concelhos", { dentro: "x;drop" }).status).toBe(400);
   });

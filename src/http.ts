@@ -3,6 +3,7 @@
  * `responder(caminho, query)` devolve { status, corpo }; os adaptadores (Node/Express/Connect, Fastify)
  * só tratam de ler o pedido e escrever a resposta.
  *
+ *   GET /saude                → { estado: "ok", total } (monitorização)
  *   GET /niveis
  *   GET /ilhas | /concelhos | /freguesias | /zonas | /lugares   ?dentro=<código>
  *   GET /pesquisa?q=<texto>&nivel=zona,lugar&dentro=<código>&limite=20
@@ -27,6 +28,9 @@ export function responder(caminho: string, query: Query = {}, g: Geografia = geo
   const partes = caminho.split("?")[0]!.split("/").filter(Boolean).map(decodeURIComponent);
   const dentro = um(query.dentro);
   if (dentro && !codigo.test(dentro)) return { status: 400, corpo: { erro: "Código inválido em 'dentro'" } };
+
+  // Saúde (monitorização do Portal 360): responde 200 com quantos locais estão carregados.
+  if (partes.length === 1 && partes[0] === "saude") return { status: g.total > 0 ? 200 : 503, corpo: { estado: g.total > 0 ? "ok" : "sem_dados", total: g.total } };
 
   if (partes.length === 0 || partes[0] === "niveis")
     return { status: 200, corpo: Object.entries(NIVEIS).map(([chave, n]) => ({ chave, nivel: n, rotulo: ROTULO_NIVEL[chave as NomeNivel] })) };
