@@ -52,6 +52,26 @@ describe.skipIf(!url)("gestão (Portal 360)", () => {
     await admin("DELETE", `/locais/${g.id}`);
     await admin("DELETE", "/locais/2384");
   });
+  it("importa: simula, valida, atualiza e substitui", async () => {
+    const tabela = await (await admin("GET", "/exportar")).json();
+    expect(tabela.length).toBe(2363);
+    // Erros: pai inexistente e código com letras → nada é gravado.
+    const mau = await admin("POST", "/importar", { linhas: [{ id: "23870499", nome: "X", nivel_detalhe: "4", concelho: "999999", ilha: "2387", pais: "238" }, { id: "abc", nome: "Y", nivel_detalhe: "5" }], simular: false });
+    expect(mau.status).toBe(422);
+    expect((await mau.json()).totalInvalidas).toBe(2);
+    // Atualizar: um nome muda, um lugar novo, o resto igual.
+    const linhas = tabela.map((l: Record<string, string>) => (l.id === "238704001001005" ? { ...l, nome: "ACHADA STO ANTONIO NOVO" } : l));
+    linhas.push({ id: "238704001001999", nome: "Lugar Importado", pais: "238", ilha: "2387", concelho: "238704", freguesia: "238704001", zona: "238704001001", nivel_detalhe: "6" });
+    const sim = await (await admin("POST", "/importar", { linhas, modo: "atualizar", simular: true })).json();
+    expect(sim).toMatchObject({ novas: 1, atualizadas: 1, iguais: 2362, apagadas: 0, simulacao: true });
+    expect((await fetch(`${base}/238704001001999`)).status).toBe(404); // simulação não grava
+    const feito = await (await admin("POST", "/importar", { linhas, modo: "atualizar", simular: false })).json();
+    expect(feito.totalAgora).toBe(2364);
+    expect((await (await fetch(`${base}/238704001001005`)).json()).nome).toBe("Achada Sto Antonio Novo");
+    // Substituir pela tabela original: apaga o lugar importado e repõe o nome.
+    const rep = await (await admin("POST", "/importar", { linhas: tabela, modo: "substituir", simular: false })).json();
+    expect(rep).toMatchObject({ apagadas: 1, atualizadas: 1, totalAgora: 2363 });
+  });
   it("concelho novo numa ilha ganha código de 2 dígitos", async () => {
     const c = await (await admin("POST", "/locais", { nome: "Concelho Teste", pai: "2387" })).json();
     expect(c.id).toMatch(/^2387\d{2}$/);

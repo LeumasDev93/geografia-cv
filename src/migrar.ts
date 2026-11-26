@@ -7,7 +7,7 @@
 import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { ligar } from "./bd.js";
+import { ligar, transacao } from "./bd.js";
 
 const url = process.env.DATABASE_URL;
 if (!url) {
@@ -69,15 +69,14 @@ try {
       .split(/\r?\n/)
       .filter((l) => /^\s*insert\s+into\s+geografia\b/i.test(l))
       .map((l) => l.trim().replace(/;\s*$/, "") + " ON CONFLICT (id) DO NOTHING;");
-    await pool.query("BEGIN");
-    if (substituir) await pool.query("DELETE FROM geografia");
-    for (let i = 0; i < inserts.length; i += 300) await pool.query(inserts.slice(i, i + 300).join("\n"));
-    await pool.query("COMMIT");
+    await transacao(pool, async (c) => {
+      if (substituir) await c.query("DELETE FROM geografia");
+      for (let i = 0; i < inserts.length; i += 300) await c.query(inserts.slice(i, i + 300).join("\n"));
+    });
     const n = (await pool.query("SELECT count(*)::int AS n FROM geografia")).rows[0]?.n;
     console.log(`✔ Tabela geografia carregada: ${n} registos (de ${inserts.length} no dump).`);
   }
 } catch (e) {
-  await pool.query("ROLLBACK").catch(() => {});
   console.error(`✖ ${(e as Error).message}`);
   process.exitCode = 1;
 } finally {

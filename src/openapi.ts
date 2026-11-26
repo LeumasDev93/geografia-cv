@@ -150,6 +150,42 @@ export function especificacao(prefixo: string) {
           responses: { 200: { description: "Removido" }, 401: erro("Chave inválida"), 404: erro("Não encontrado"), 409: erro("Tem locais por baixo") },
         },
       },
+      "/admin/exportar": {
+        get: { ...admin, summary: "Exportar a tabela inteira", description: "Todas as linhas no formato da tabela `geografia` (id, nome, pais, ilha, concelho, freguesia, zona, nome_norm, nivel_detalhe).", responses: { 200: { description: "Linhas" }, 401: erro("Chave inválida") } },
+      },
+      "/admin/importar": {
+        post: {
+          ...admin,
+          summary: "Importar linhas (atualizar ou substituir)",
+          description:
+            "Linhas no formato da tabela. **atualizar**: cria as novas e atualiza as que mudaram (não apaga). **substituir**: a tabela fica igual ao envio. " +
+            "Com `simular: true` (por omissão) só devolve o resumo. Se alguma linha for inválida (422), nada é gravado.",
+          requestBody: {
+            required: true,
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  required: ["linhas"],
+                  properties: {
+                    modo: { type: "string", enum: ["atualizar", "substituir"], default: "atualizar" },
+                    simular: { type: "boolean", default: true },
+                    linhas: {
+                      type: "array",
+                      items: {
+                        type: "object",
+                        required: ["id", "nome", "nivel_detalhe"],
+                        properties: { id: { type: "string" }, nome: { type: "string" }, pais: { type: "string" }, ilha: { type: "string" }, concelho: { type: "string" }, freguesia: { type: "string" }, zona: { type: "string" }, nivel_detalhe: { type: "string", example: "6" } },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+          responses: { 200: { description: "Resumo (novas, atualizadas, iguais, apagadas)" }, 401: erro("Chave inválida"), 422: erro("Linhas inválidas: nada foi gravado") },
+        },
+      },
       "/admin/recarregar": {
         post: { ...admin, summary: "Voltar a ler a base de dados", responses: { 200: { description: "Recarregado" }, 401: erro("Chave inválida") } },
       },

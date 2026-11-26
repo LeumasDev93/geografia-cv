@@ -6,7 +6,24 @@
 import { Geografia, formatarNome } from "./nucleo.js";
 import type { Linha } from "./dados.js";
 
-export type Pool = { query: (sql: string, params?: unknown[]) => Promise<{ rows: Record<string, string | null>[] }>; end: () => Promise<void> };
+type Consulta = (sql: string, params?: unknown[]) => Promise<{ rows: Record<string, string | null>[]; rowCount?: number | null }>;
+export type Pool = { query: Consulta; end: () => Promise<void>; connect: () => Promise<{ query: Consulta; release: () => void }> };
+
+/** Corre `f` numa transação, sempre na mesma ligação (BEGIN/COMMIT; ROLLBACK se falhar). */
+export async function transacao<T>(pool: Pool, f: (c: { query: Consulta }) => Promise<T>): Promise<T> {
+  const c = await pool.connect();
+  try {
+    await c.query("BEGIN");
+    const r = await f(c);
+    await c.query("COMMIT");
+    return r;
+  } catch (e) {
+    await c.query("ROLLBACK").catch(() => {});
+    throw e;
+  } finally {
+    c.release();
+  }
+}
 
 export async function ligar(url: string): Promise<Pool> {
   const pg = (await import("pg")).default as unknown as { Pool: new (o: object) => Pool };

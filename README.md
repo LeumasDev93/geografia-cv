@@ -97,7 +97,11 @@ POST   /geografia/admin/locais           { "nome": "Bairro Novo", "pai": "238704
 PATCH  /geografia/admin/locais/<código>  { "nome": "Novo nome" }
 DELETE /geografia/admin/locais/<código>  (só sem locais por baixo)
 POST   /geografia/admin/recarregar
+GET    /geografia/admin/exportar          (tabela inteira)
+POST   /geografia/admin/importar          { "linhas": [...], "modo": "atualizar" | "substituir", "simular": true }
 ```
+
+A importação valida tudo (códigos, níveis, nível de cima existente) e grava numa só transação: se uma linha estiver mal, nada é gravado.
 
 As alterações aparecem logo nas leituras públicas (o serviço volta a ler a base depois de cada alteração).
 
