@@ -81,12 +81,27 @@ npm start                   # "… (dados da base de dados)"
 - `npm run migrate:substituir` apaga os dados da tabela e volta a carregar o dump (para atualizar a regionalização).
 - Sem `DATABASE_URL`, usa os dados incluídos no pacote.
 
+## Gestão (Portal 360)
+
+Com base de dados e `CHAVE_ADMIN` definida, o Portal 360 gere a regionalização por estas rotas
+(cabeçalho `Authorization: Bearer <CHAVE_ADMIN>`; chamar sempre a partir do servidor, nunca do browser):
+
+```
+GET    /geografia/admin/estado
+POST   /geografia/admin/locais           { "nome": "Bairro Novo", "pai": "238704001001" }   (código gerado sozinho)
+PATCH  /geografia/admin/locais/<código>  { "nome": "Novo nome" }
+DELETE /geografia/admin/locais/<código>  (só sem locais por baixo)
+POST   /geografia/admin/recarregar
+```
+
+As alterações aparecem logo nas leituras públicas (o serviço volta a ler a base depois de cada alteração).
+
 ## Publicar
 
 - **Vercel:** importar este repositório (o `vercel.json` já encaminha tudo para `api/index.js`).
   Fica em `https://<projeto>.vercel.app/geografia/...`.
 - **Docker:** `docker build -t geografia-cv . && docker run -p 4100:4100 geografia-cv`.
-- Variáveis: `DATABASE_URL` (opcional), `PORT` (servidor autónomo), `PREFIXO` (por omissão `/geografia`) e `RECARREGAR_MINUTOS`.
+- Variáveis: `DATABASE_URL` (opcional), `PORT` (servidor autónomo), `PREFIXO` (por omissão `/geografia`) `RECARREGAR_MINUTOS` e `CHAVE_ADMIN` (gestão).
 
 ## Usar noutro projeto
 

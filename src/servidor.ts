@@ -21,6 +21,7 @@ if (fonte) {
     process.exit(1);
   }
 }
-createServer(middlewareGeografia({ prefixo, geografia: fonte })).listen(porta, () =>
+const chaveAdmin = process.env.CHAVE_ADMIN?.trim() || undefined;
+createServer(middlewareGeografia({ prefixo, geografia: fonte, fonteBase: fonte, chaveAdmin })).listen(porta, () =>
   console.log(`Geografia de Cabo Verde em http://localhost:${porta}${prefixo}${fonte ? " (dados da base de dados)" : " (dados incluídos)"}`),
 );

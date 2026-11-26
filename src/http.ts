@@ -10,6 +10,8 @@
  *   GET /<código>/filhos     → os filhos diretos
  */
 import { NIVEIS, ROTULO_NIVEL, geografia, type Geografia, type NomeNivel } from "./nucleo.js";
+import { lerCorpo, responderAdmin } from "./admin.js";
+import type { FonteBase } from "./bd.js";
 
 export interface Resposta {
   status: number;
@@ -49,11 +51,12 @@ export function responder(caminho: string, query: Query = {}, g: Geografia = geo
 }
 
 /** Cabeçalhos: dados públicos que quase nunca mudam (cache de um dia). */
-export const CABECALHOS = { "content-type": "application/json; charset=utf-8", "cache-control": "public, max-age=86400", "access-control-allow-origin": "*" };
+export const CABECALHOS = { "content-type": "application/json; charset=utf-8", "cache-control": "public, max-age=300", "access-control-allow-origin": "*" };
 
 interface PedidoNode {
   method?: string;
   url?: string;
+  headers?: Record<string, string | string[] | undefined> & { authorization?: string };
 }
 interface RespostaNode {
   statusCode: number;
@@ -68,10 +71,26 @@ interface RespostaNode {
  *   app.use(middlewareGeografia({ prefixo: "/geografia" }))           // Express
  *   http.createServer(middlewareGeografia({ prefixo: "" })).listen(…)  // Node puro
  */
-export function middlewareGeografia(opcoes: { prefixo?: string; geografia?: Geografia | (() => Geografia | Promise<Geografia>) } = {}) {
+export function middlewareGeografia(
+  opcoes: { prefixo?: string; geografia?: Geografia | (() => Geografia | Promise<Geografia>); chaveAdmin?: string; fonteBase?: FonteBase } = {},
+) {
   const prefixo = (opcoes.prefixo ?? "/geografia").replace(/\/$/, "");
   return async (req: PedidoNode, res: RespostaNode, next?: (e?: unknown) => void) => {
     const url = new URL(req.url ?? "/", "http://local");
+    // Gestão (Portal 360): {prefixo}/admin/...
+    if (url.pathname.startsWith(`${prefixo}/admin/`)) {
+      res.setHeader("content-type", "application/json; charset=utf-8");
+      res.setHeader("cache-control", "no-store");
+      let r: Resposta;
+      try {
+        const corpo = req.method === "GET" || req.method === "DELETE" ? {} : await lerCorpo(req as never);
+        r = await responderAdmin(req.method ?? "GET", url.pathname.slice(prefixo.length + 7), corpo, req.headers?.authorization, { chave: opcoes.chaveAdmin, fonte: opcoes.fonteBase });
+      } catch (e) {
+        r = { status: e instanceof SyntaxError ? 400 : 500, corpo: { erro: e instanceof SyntaxError ? "JSON inválido" : (e as Error).message } };
+      }
+      res.statusCode = r.status;
+      return res.end(JSON.stringify(r.corpo));
+    }
     const dentro = url.pathname === prefixo || url.pathname.startsWith(`${prefixo}/`);
     if (!dentro || (req.method && !["GET", "HEAD", "OPTIONS"].includes(req.method))) {
       if (next) return next();

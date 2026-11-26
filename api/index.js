@@ -5,7 +5,7 @@ import { geografiaDaBase } from "../dist/bd.js";
 
 const prefixo = process.env.PREFIXO ?? "/geografia";
 const fonte = process.env.DATABASE_URL ? geografiaDaBase(process.env.DATABASE_URL, Number(process.env.RECARREGAR_MINUTOS ?? 60)) : undefined;
-const mw = middlewareGeografia({ prefixo, geografia: fonte });
+const mw = middlewareGeografia({ prefixo, geografia: fonte, fonteBase: fonte, chaveAdmin: process.env.CHAVE_ADMIN?.trim() || undefined });
 
 export default function handler(req, res) {
   return mw(req, res, () => {

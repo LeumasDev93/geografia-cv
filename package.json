@@ -22,7 +22,7 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "vitest run",
+    "test": "npm run build && vitest run",
     "importar": "node scripts/importar.mjs",
     "servidor": "node --env-file-if-exists=.env dist/servidor.js",
     "prepare": "tsc -p tsconfig.json",

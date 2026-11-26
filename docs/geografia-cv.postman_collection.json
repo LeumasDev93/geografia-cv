@@ -28,6 +28,10 @@
     {
       "key": "lugar",
       "value": "238704001001005"
+    },
+    {
+      "key": "chave_admin",
+      "value": "COLE-AQUI-A-CHAVE_ADMIN"
     }
   ],
   "item": [
@@ -769,6 +773,171 @@
               }
             }
           ]
+        }
+      ]
+    },
+    {
+      "name": "Gestão (Portal 360, com chave)",
+      "description": "Precisa de DATABASE_URL e CHAVE_ADMIN no serviço. Ponha a chave na variável chave_admin.",
+      "item": [
+        {
+          "name": "Estado",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{chave_admin}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/estado",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admin",
+                "estado"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Criar lugar numa zona",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{chave_admin}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/locais",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admin",
+                "locais"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Bairro Novo\",\n  \"pai\": \"{{zona}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Renomear local",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{chave_admin}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/locais/{{lugar}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admin",
+                "locais",
+                "{{lugar}}"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Achada Santo António\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "Remover local (sem filhos)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{chave_admin}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/locais/<código>",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admin",
+                "locais",
+                "<código>"
+              ]
+            }
+          }
+        },
+        {
+          "name": "Recarregar da base",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Authorization",
+                "value": "Bearer {{chave_admin}}"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{base_url}}/admin/recarregar",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "admin",
+                "recarregar"
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
         }
       ]
     }

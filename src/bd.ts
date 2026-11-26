@@ -6,7 +6,7 @@
 import { Geografia, formatarNome } from "./nucleo.js";
 import type { Linha } from "./dados.js";
 
-type Pool = { query: (sql: string, params?: unknown[]) => Promise<{ rows: Record<string, string | null>[] }>; end: () => Promise<void> };
+export type Pool = { query: (sql: string, params?: unknown[]) => Promise<{ rows: Record<string, string | null>[] }>; end: () => Promise<void> };
 
 export async function ligar(url: string): Promise<Pool> {
   const pg = (await import("pg")).default as unknown as { Pool: new (o: object) => Pool };
@@ -23,24 +23,35 @@ export async function lerLinhas(pool: Pool): Promise<Linha[]> {
   });
 }
 
+export interface FonteBase {
+  /** A geografia atual (recarrega quando passa o tempo). */
+  (): Promise<Geografia>;
+  /** Volta a ler a base já (depois de uma alteração). */
+  recarregar: () => Promise<Geografia>;
+  /** Quando foi lida pela última vez. */
+  carregadaEm: () => Date | null;
+  /** Ligação à base (para a gestão). */
+  pool: () => Promise<Pool>;
+}
+
 /**
  * Geografia carregada da base de dados, recarregada de tempos a tempos (para as alterações feitas
  * no Portal 360 aparecerem sem reiniciar). Se a base falhar depois de já ter dados, continua com os últimos.
  */
-export function geografiaDaBase(url: string, recarregarMin = 60): () => Promise<Geografia> {
+export function geografiaDaBase(url: string, recarregarMin = 60): FonteBase {
   let pool: Pool | null = null;
   let atual: Geografia | null = null;
   let quando = 0;
   let aCarregar: Promise<Geografia> | null = null;
+  const obterPool = async () => (pool ??= await ligar(url));
   const carregar = async () => {
-    pool ??= await ligar(url);
-    const linhas = await lerLinhas(pool);
+    const linhas = await lerLinhas(await obterPool());
     if (!linhas.length) throw new Error("A tabela geografia está vazia (corra npm run migrate)");
     atual = new Geografia(linhas);
     quando = Date.now();
     return atual;
   };
-  return async () => {
+  const fonte = (async () => {
     if (atual && Date.now() - quando < recarregarMin * 60_000) return atual;
     aCarregar ??= carregar().finally(() => (aCarregar = null));
     try {
@@ -49,5 +60,9 @@ export function geografiaDaBase(url: string, recarregarMin = 60): () => Promise<
       if (atual) return atual;
       throw e;
     }
-  };
+  }) as FonteBase;
+  fonte.recarregar = () => carregar();
+  fonte.carregadaEm = () => (quando ? new Date(quando) : null);
+  fonte.pool = obterPool;
+  return fonte;
 }
