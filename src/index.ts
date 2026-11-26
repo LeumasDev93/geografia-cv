@@ -2,3 +2,4 @@ export { Geografia, geografia, normalizar, formatarNome, NIVEIS, ROTULO_NIVEL, t
 export { responder, middlewareGeografia, pluginFastifyGeografia, CABECALHOS, type Resposta } from "./http.js";
 export { responderAdmin } from "./admin.js";
 export { geografiaDaBase, type FonteBase } from "./bd.js";
+export { comMonitor } from "./monitor.js";

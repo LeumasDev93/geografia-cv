@@ -6,6 +6,7 @@
 import { createServer } from "node:http";
 import { middlewareGeografia } from "./http.js";
 import { geografiaDaBase } from "./bd.js";
+import { comMonitor } from "./monitor.js";
 
 const porta = Number(process.env.PORT ?? 4100);
 const prefixo = process.env.PREFIXO ?? "/geografia";
@@ -22,6 +23,9 @@ if (fonte) {
   }
 }
 const chaveAdmin = process.env.CHAVE_ADMIN?.trim() || undefined;
-createServer(middlewareGeografia({ prefixo, geografia: fonte, fonteBase: fonte, chaveAdmin })).listen(porta, () =>
+// Monitorização do Portal 360 (PORTAL_URL + PORTAL_APP_ID + MONITOR_CHAVE); sem elas, não faz nada.
+const tratar = comMonitor(middlewareGeografia({ prefixo, geografia: fonte, fonteBase: fonte, chaveAdmin }), { isentos: [`${prefixo}/saude`] });
+if (tratar.ativo) console.log("Monitorização do Portal 360 ligada.");
+createServer(tratar).listen(porta, () =>
   console.log(`Geografia de Cabo Verde em http://localhost:${porta}${prefixo}${fonte ? " (dados da base de dados)" : " (dados incluídos)"}`),
 );

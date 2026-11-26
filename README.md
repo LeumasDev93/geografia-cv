@@ -101,6 +101,19 @@ POST   /geografia/admin/recarregar
 
 As alterações aparecem logo nas leituras públicas (o serviço volta a ler a base depois de cada alteração).
 
+## Monitorização (Portal 360)
+
+Registe a aplicação no Portal 360 (código `geografia-cv`), gere a chave em Monitorização e defina:
+
+```
+PORTAL_URL=https://<portal-360>
+PORTAL_APP_ID=geografia-cv
+MONITOR_CHAVE=<chave gerada no portal>
+```
+
+O serviço envia ao portal os pedidos (rota, código, tempo) e obedece ao modo manutenção e aos endpoints
+bloqueados configurados lá. O caminho de saúde é `/geografia/saude`. Sem estas variáveis, não monitoriza.
+
 ## Publicar
 
 - **Vercel:** importar este repositório (o `vercel.json` já encaminha tudo para `api/index.js`).
