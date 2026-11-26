@@ -4,7 +4,7 @@
  * `Authorization: Bearer <chave>`. Nunca exponha a chave no browser: chame a partir do servidor.
  *
  *   GET    {prefixo}/admin/estado
- *   POST   {prefixo}/admin/locais            { nome, pai, id? }   → cria um filho de `pai`
+ *   POST   {prefixo}/admin/locais            { nome, pai, id? }   → cria um filho de `pai` (ilha nova: pai = "238")
  *   PATCH  {prefixo}/admin/locais/<código>   { nome }
  *   DELETE {prefixo}/admin/locais/<código>                         → só sem filhos
  *   POST   {prefixo}/admin/recarregar
@@ -58,12 +58,14 @@ export async function responderAdmin(
 
   // Criar um filho
   if (metodo === "POST" && partes.length === 1) {
-    const pai = typeof b.pai === "string" ? g.obter(b.pai) : null;
+    // O país não é uma linha da tabela: uma ilha nova tem como "pai" o código do país (ex.: 238 = Cabo Verde).
+    const paisId = typeof b.pai === "string" && /^[0-9]{1,5}$/.test(b.pai) && !g.obter(b.pai) && (g.listar("ilha").some((i) => i.pai === b.pai) || b.pai === "238") ? b.pai : null;
+    const pai = paisId ? { id: paisId, nome: "Cabo Verde", nivel: "pais" as const, pai: null } : typeof b.pai === "string" ? g.obter(b.pai) : null;
     if (!pai) return erro(400, "Indique o local de cima (pai) com um código existente");
     const nivelPai = NIVEIS[pai.nivel];
     const nivel = nivelPai + 1;
     if (nivel > 6) return erro(400, "Um lugar não pode ter locais por baixo");
-    const irmaos = g.filhos(pai.id);
+    const irmaos = paisId ? g.listar("ilha").filter((i) => i.pai === paisId) : g.filhos(pai.id);
     if (irmaos.some((l) => normalizar(l.nome) === normalizar(nome))) return erro(409, `Já existe «${nome}» em ${pai.nome}`);
     let id = typeof b.id === "string" && b.id.trim() ? b.id.trim() : "";
     if (id) {
@@ -80,7 +82,7 @@ export async function responderAdmin(
     }
     // Colunas de cima: copiadas do caminho do pai.
     const cols: Record<string, string | null> = { pais: null, ilha: null, concelho: null, freguesia: null, zona: null };
-    for (const l of g.caminho(pai.id)) cols[COLUNA[NIVEIS[l.nivel]]!] = l.id;
+    if (!paisId) for (const l of g.caminho(pai.id)) cols[COLUNA[NIVEIS[l.nivel]]!] = l.id;
     if (nivel === 2) cols.pais = pai.id;
     if (!cols.pais) cols.pais = g.caminho(pai.id)[0]?.pai ?? null;
     await pool.query(

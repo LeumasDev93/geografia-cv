@@ -41,6 +41,17 @@ describe.skipIf(!url)("gestão (Portal 360)", () => {
     expect((await admin("DELETE", `/locais/${novo.id}`)).status).toBe(200);
     expect((await fetch(`${base}/${novo.id}`)).status).toBe(404);
   });
+  it("ilha nova em Cabo Verde (pai = 238), com código indicado ou gerado", async () => {
+    const r = await admin("POST", "/locais", { nome: "Sal", pai: "238", id: "2384" });
+    expect(r.status).toBe(201);
+    expect(await r.json()).toMatchObject({ id: "2384", nome: "Sal", nivel: "ilha", pai: "238" });
+    expect((await (await fetch(`${base}/ilhas`)).json()).map((i: { nome: string }) => i.nome)).toContain("Sal");
+    expect((await admin("POST", "/locais", { nome: "sal", pai: "238" })).status).toBe(409);
+    const g = await (await admin("POST", "/locais", { nome: "Ilha Teste", pai: "238" })).json();
+    expect(g.id).toMatch(/^238\d$/);
+    await admin("DELETE", `/locais/${g.id}`);
+    await admin("DELETE", "/locais/2384");
+  });
   it("concelho novo numa ilha ganha código de 2 dígitos", async () => {
     const c = await (await admin("POST", "/locais", { nome: "Concelho Teste", pai: "2387" })).json();
     expect(c.id).toMatch(/^2387\d{2}$/);
